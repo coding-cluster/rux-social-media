@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { createPost } from '@/api/posts'
+import { t } from '@/i18n'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -56,8 +57,8 @@ async function publish() {
   <main class="flex min-h-[calc(100vh-96px)] items-center justify-center px-4 py-8">
     <div class="flex w-full max-w-[560px] flex-col gap-6 rounded-[32px] bg-mount p-10 shadow-2xl">
       <div class="flex flex-col gap-1">
-        <h1 class="text-xl font-expanded font-semibold tracking-[-0.02em]">Hang something</h1>
-        <p class="text-sm text-graphite/60">Add a photo to your wall.</p>
+        <h1 class="text-xl font-expanded font-semibold tracking-[-0.02em]">{{ t('hangSomething') }}</h1>
+        <p class="text-sm text-graphite/60">{{ t('hangSubtitle') }}</p>
       </div>
 
       <label
@@ -72,17 +73,17 @@ async function publish() {
             <path d="M4 15l4 -4a3 5 0 0 1 3 0l5 5" />
             <path d="M14 14l1 -1a3 5 0 0 1 3 0l2 2" />
           </svg>
-          <p class="text-sm font-medium text-graphite/60">Click to choose a photo</p>
+          <p class="text-sm font-medium text-graphite/60">{{ t('choosePhoto') }}</p>
         </template>
       </label>
 
       <label class="flex flex-col gap-2">
-        <span class="text-xs font-medium text-graphite/60">Caption</span>
+        <span class="text-xs font-medium text-graphite/60">{{ t('caption') }}</span>
         <textarea
           v-model="caption"
           maxlength="280"
           rows="3"
-          placeholder="Say something about it…"
+          :placeholder="t('captionPlaceholder')"
           class="rounded-2xl bg-wall-deep px-4 py-3 text-sm italic outline-none focus-visible:ring-2 focus-visible:ring-umber"
         />
       </label>
@@ -94,7 +95,7 @@ async function publish() {
         :disabled="!file || publishing"
         @click="publish"
       >
-        {{ publishing ? 'Hanging…' : 'Hang it' }}
+        {{ publishing ? t('hanging') : t('hangIt') }}
       </button>
     </div>
   </main>

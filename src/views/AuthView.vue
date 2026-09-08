@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { t } from '@/i18n'
 
 const route = useRoute()
 const router = useRouter()
@@ -56,32 +57,32 @@ const inputClass =
 
         <div class="flex flex-col gap-1">
           <h1 class="text-xl font-expanded font-semibold tracking-[-0.02em]">
-            {{ mode === 'signup' ? 'Create an account' : 'Welcome back' }}
+            {{ mode === 'signup' ? t('createAccount') : t('welcomeBack') }}
           </h1>
           <p class="text-sm text-graphite/60">
-            {{ mode === 'signup' ? 'Sign up and get your first photo on the wall.' : 'Sign in to see what’s new on the wall.' }}
+            {{ mode === 'signup' ? t('signUpSubtitle') : t('signInSubtitle') }}
           </p>
         </div>
 
         <form class="flex flex-col gap-4" @submit.prevent="submit">
           <template v-if="mode === 'signup'">
             <label class="flex flex-col gap-2">
-              <span class="text-xs font-medium text-graphite/60">Display name</span>
+              <span class="text-xs font-medium text-graphite/60">{{ t('displayName') }}</span>
               <input v-model="displayName" type="text" required :class="inputClass" />
             </label>
             <label class="flex flex-col gap-2">
-              <span class="text-xs font-medium text-graphite/60">Handle</span>
+              <span class="text-xs font-medium text-graphite/60">{{ t('handle') }}</span>
               <input v-model="handle" type="text" required pattern="[a-z0-9_]{3,20}" :class="inputClass" />
             </label>
           </template>
 
           <label class="flex flex-col gap-2">
-            <span class="text-xs font-medium text-graphite/60">Email</span>
+            <span class="text-xs font-medium text-graphite/60">{{ t('email') }}</span>
             <input v-model="email" type="email" required autocomplete="email" :class="inputClass" />
           </label>
 
           <label class="flex flex-col gap-2">
-            <span class="text-xs font-medium text-graphite/60">Password</span>
+            <span class="text-xs font-medium text-graphite/60">{{ t('password') }}</span>
             <div class="relative">
               <input
                 v-model="password"
@@ -116,12 +117,12 @@ const inputClass =
             class="mt-2 rounded-full bg-umber py-3 text-sm font-medium text-wall transition hover:brightness-110 disabled:opacity-50"
             :disabled="submitting"
           >
-            {{ submitting ? 'Please wait…' : mode === 'signup' ? 'Create account' : 'Sign in' }}
+            {{ submitting ? t('pleaseWait') : mode === 'signup' ? t('createAccount') : t('signIn') }}
           </button>
         </form>
 
         <button type="button" class="w-fit text-sm font-medium hover:text-umber" @click="toggleMode">
-          {{ mode === 'signup' ? 'Have an account? Sign in' : 'New here? Sign up' }}
+          {{ mode === 'signup' ? t('haveAccount') : t('newHere') }}
         </button>
       </div>
 

@@ -2,6 +2,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { toggleLike } from '@/api/posts'
 import { useMark } from '@/motion/useMark'
+import { t } from '@/i18n'
 
 const props = defineProps({ post: { type: Object, required: true } })
 const emit = defineEmits(['close'])
@@ -66,7 +67,7 @@ async function onLike() {
             class="inline-block h-[6px] w-[6px] bg-umber"
             :style="{ transform: post.likedByMe ? 'scale(1)' : 'scale(0)' }"
           />
-          {{ post.likedByMe ? 'Liked' : 'Like' }} · {{ post.likeCount }}
+          {{ post.likedByMe ? t('liked') : t('like') }} · {{ post.likeCount }}
         </button>
       </div>
     </div>

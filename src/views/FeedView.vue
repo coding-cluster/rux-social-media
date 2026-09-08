@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { getFeed } from '@/api/posts'
 import MasonryGrid from '@/components/post/MasonryGrid.vue'
 import PostExpandOverlay from '@/components/post/PostExpandOverlay.vue'
+import { t } from '@/i18n'
 
 const posts = ref([])
 const loading = ref(true)
@@ -29,9 +30,9 @@ async function loadMore() {
 
 <template>
   <main class="mx-auto max-w-[1400px] px-6 py-12">
-    <p v-if="loading" class="text-sm text-graphite/60">Loading…</p>
+    <p v-if="loading" class="text-sm text-graphite/60">{{ t('loading') }}</p>
     <p v-else-if="!posts.length" class="text-lg font-expanded font-semibold">
-      Nothing on the wall yet. Follow someone, or hang the first thing.
+      {{ t('feedEmpty') }}
     </p>
     <MasonryGrid v-else :posts="posts" @select="expandedPost = $event" />
     <button
@@ -40,7 +41,7 @@ async function loadMore() {
       :disabled="loadingMore"
       @click="loadMore"
     >
-      {{ loadingMore ? 'Loading…' : 'Show more' }}
+      {{ loadingMore ? t('loading') : t('showMore') }}
     </button>
 
     <PostExpandOverlay v-if="expandedPost" :post="expandedPost" @close="expandedPost = null" />
