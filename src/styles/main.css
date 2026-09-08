@@ -1,0 +1,35 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Archivo', sans-serif;
+  --font-expanded: 'Archivo Expanded', sans-serif;
+
+  --color-wall: #d9d9cf;
+  --color-wall-deep: #c6c6ba;
+  --color-mount: #f2f1ec;
+  --color-graphite: #22231f;
+  --color-ultramarine: #2e3fd0;
+  --color-oak: #b39a76;
+
+  /* rem scale — nothing between these steps, change the step instead */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.5rem;
+  --text-xl: 2.25rem;
+  --text-2xl: 3.75rem;
+
+  --datum: 50%;
+}
+
+body {
+  background: var(--color-wall);
+  color: var(--color-graphite);
+  font-family: var(--font-sans);
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-ultramarine);
+  outline-offset: 2px;
+}
