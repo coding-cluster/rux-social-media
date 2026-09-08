@@ -15,7 +15,7 @@ function load() {
     // storage unavailable or corrupt — fall through to fresh seed
   }
   const profiles = makeProfiles()
-  const posts = makePosts(profiles)
+  const posts = makePosts(profiles, 120)
   return { profiles, posts, comments: [], accounts: [] }
 }
 

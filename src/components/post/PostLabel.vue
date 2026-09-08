@@ -19,7 +19,7 @@ function timeAgo(iso) {
   <div :class="['flex flex-col gap-1', align === 'right' ? 'md:text-right md:items-end' : 'text-left items-start']">
     <RouterLink
       :to="{ name: 'profile', params: { handle: post.authorHandle } }"
-      class="text-sm font-medium text-graphite hover:text-ultramarine"
+      class="text-sm font-medium text-graphite hover:text-umber"
     >
       {{ post.authorDisplayName }}
     </RouterLink>

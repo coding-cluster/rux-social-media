@@ -8,7 +8,7 @@ import db, { delay, persist } from './db'
  * @param {{ cursor?: string, limit?: number }} [opts]
  * @returns {Promise<{ posts: import('../types').FeedPost[], nextCursor: string|null }>}
  */
-export async function getFeed({ cursor, limit = 10 } = {}) {
+export async function getFeed({ cursor, limit = 70 } = {}) {
   await delay()
   const sorted = [...db.posts].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   const start = cursor ? sorted.findIndex((p) => p.id === cursor) + 1 : 0

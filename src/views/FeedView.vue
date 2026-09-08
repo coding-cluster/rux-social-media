@@ -1,27 +1,20 @@
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted } from 'vue'
 import { getFeed } from '@/api/posts'
-import PostRow from '@/components/post/PostRow.vue'
-import { useHangReveal } from '@/motion/useHangReveal'
-import { useAdvance } from '@/motion/useAdvance'
+import MasonryGrid from '@/components/post/MasonryGrid.vue'
+import PostExpandOverlay from '@/components/post/PostExpandOverlay.vue'
 
 const posts = ref([])
 const loading = ref(true)
 const nextCursor = ref(null)
 const loadingMore = ref(false)
-const feedRef = ref(null)
-
-const { play: playHang } = useHangReveal(feedRef)
-const { registerNew: registerAdvance } = useAdvance(feedRef)
+const expandedPost = ref(null)
 
 onMounted(async () => {
   const page = await getFeed()
   posts.value = page.posts
   nextCursor.value = page.nextCursor
   loading.value = false
-  await nextTick()
-  playHang()
-  registerAdvance()
 })
 
 async function loadMore() {
@@ -31,27 +24,25 @@ async function loadMore() {
   posts.value.push(...page.posts)
   nextCursor.value = page.nextCursor
   loadingMore.value = false
-  await nextTick()
-  registerAdvance()
 }
 </script>
 
 <template>
-  <main class="max-w-[980px] mx-auto px-6 py-12">
+  <main class="mx-auto max-w-[1400px] px-6 py-12">
     <p v-if="loading" class="text-sm text-graphite/60">Loading…</p>
     <p v-else-if="!posts.length" class="text-lg font-expanded font-semibold">
       Nothing on the wall yet. Follow someone, or hang the first thing.
     </p>
-    <div v-else ref="feedRef" class="flex flex-col gap-16">
-      <PostRow v-for="(post, i) in posts" :key="post.id" :post="post" :draw-datum="i === 0" />
-    </div>
+    <MasonryGrid v-else :posts="posts" @select="expandedPost = $event" />
     <button
       v-if="nextCursor"
-      class="mt-16 text-sm font-medium hover:text-ultramarine disabled:opacity-50"
+      class="mt-16 text-sm font-medium hover:text-umber disabled:opacity-50"
       :disabled="loadingMore"
       @click="loadMore"
     >
       {{ loadingMore ? 'Loading…' : 'Show more' }}
     </button>
+
+    <PostExpandOverlay v-if="expandedPost" :post="expandedPost" @close="expandedPost = null" />
   </main>
 </template>

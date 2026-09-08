@@ -8,7 +8,7 @@
   --color-wall-deep: #c6c6ba;
   --color-mount: #f2f1ec;
   --color-graphite: #22231f;
-  --color-ultramarine: #2e3fd0;
+  --color-umber: #7a4a2a;
   --color-oak: #b39a76;
 
   /* rem scale — nothing between these steps, change the step instead */
@@ -30,6 +30,6 @@ body {
 }
 
 *:focus-visible {
-  outline: 2px solid var(--color-ultramarine);
+  outline: 2px solid var(--color-umber);
   outline-offset: 2px;
 }

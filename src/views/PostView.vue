@@ -59,12 +59,12 @@ async function submitComment() {
         <PostLabel :post="post" align="left" />
         <button
           class="w-fit flex items-center gap-2 text-xs tracking-[0.05em] font-medium"
-          :class="post.likedByMe ? 'text-ultramarine' : 'text-graphite/60 hover:text-graphite'"
+          :class="post.likedByMe ? 'text-umber' : 'text-graphite/60 hover:text-graphite'"
           @click="onLike"
         >
           <span
             ref="markRef"
-            class="inline-block w-[6px] h-[6px] bg-ultramarine"
+            class="inline-block w-[6px] h-[6px] bg-umber"
             :style="{ transform: post.likedByMe ? 'scale(1)' : 'scale(0)' }"
           />
           {{ post.likedByMe ? 'Liked' : 'Like' }}
@@ -77,7 +77,7 @@ async function submitComment() {
       <p v-if="!comments.length" class="text-sm text-graphite/60">No comments yet.</p>
       <ul v-else class="flex flex-col gap-4">
         <li v-for="c in comments" :key="c.id">
-          <RouterLink :to="{ name: 'profile', params: { handle: c.authorHandle } }" class="text-sm font-medium hover:text-ultramarine">
+          <RouterLink :to="{ name: 'profile', params: { handle: c.authorHandle } }" class="text-sm font-medium hover:text-umber">
             {{ c.authorDisplayName }}
           </RouterLink>
           <p class="text-base">{{ c.body }}</p>
@@ -90,9 +90,9 @@ async function submitComment() {
           type="text"
           maxlength="280"
           placeholder="Write a comment"
-          class="flex-1 bg-wall-deep px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ultramarine"
+          class="flex-1 bg-wall-deep px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-umber"
         />
-        <button type="submit" class="text-sm font-medium hover:text-ultramarine disabled:opacity-50" :disabled="posting">Post</button>
+        <button type="submit" class="text-sm font-medium hover:text-umber disabled:opacity-50" :disabled="posting">Post</button>
       </form>
     </section>
   </main>

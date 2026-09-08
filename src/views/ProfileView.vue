@@ -1,18 +1,33 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { getProfileByHandle } from '@/api/profiles'
 import { getPostsByHandle } from '@/api/posts'
+import MasonryGrid from '@/components/post/MasonryGrid.vue'
+import PostExpandOverlay from '@/components/post/PostExpandOverlay.vue'
 
 const props = defineProps({ handle: String })
+const route = useRoute()
+const router = useRouter()
 const profile = ref(null)
 const posts = ref([])
 const loading = ref(true)
+const expandedPost = ref(null)
 
 async function load() {
   loading.value = true
   profile.value = await getProfileByHandle(props.handle)
   posts.value = profile.value ? await getPostsByHandle(props.handle) : []
   loading.value = false
+
+  // freshly hung post: land here with its card already expanded, then drop the
+  // query so a refresh or back-nav doesn't reopen it
+  const openId = route.query.post
+  if (openId) {
+    const match = posts.value.find((p) => p.id === openId)
+    if (match) expandedPost.value = match
+    router.replace({ query: {} })
+  }
 }
 
 onMounted(load)
@@ -20,7 +35,7 @@ watch(() => props.handle, load)
 </script>
 
 <template>
-  <main class="max-w-[980px] mx-auto px-6 py-12">
+  <main class="mx-auto max-w-[1400px] px-6 py-12">
     <p v-if="loading" class="text-sm text-graphite/60">Loading…</p>
     <p v-else-if="!profile" class="text-lg font-expanded font-semibold">No one's hung anything under that name.</p>
     <template v-else>
@@ -31,23 +46,9 @@ watch(() => props.handle, load)
       </header>
 
       <p v-if="!posts.length" class="text-sm text-graphite/60">Nothing hung yet.</p>
-      <div v-else class="grid grid-cols-2 md:grid-cols-3 gap-2">
-        <RouterLink
-          v-for="post in posts"
-          :key="post.id"
-          :to="{ name: 'post', params: { id: post.id } }"
-          class="relative bg-mount aspect-square block"
-          :data-flip-id="post.id"
-        >
-          <img
-            :src="post.imagePath"
-            :width="post.imageWidth"
-            :height="post.imageHeight"
-            :alt="post.caption || `Photo by ${post.authorHandle}`"
-            class="absolute inset-0 w-full h-full object-cover"
-          />
-        </RouterLink>
-      </div>
+      <MasonryGrid v-else :posts="posts" @select="expandedPost = $event" />
     </template>
+
+    <PostExpandOverlay v-if="expandedPost" :post="expandedPost" @close="expandedPost = null" />
   </main>
 </template>
