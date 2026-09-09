@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { getActiveNotes } from '@/api/notes'
+import { deleteNote, getActiveNotes } from '@/api/notes'
 import { sendMessage } from '@/api/messages'
 import CreateNoteModal from './CreateNoteModal.vue'
 import { t } from '@/i18n'
@@ -14,6 +14,10 @@ const replyNote = ref(null)
 const replyDraft = ref('')
 const sendingReply = ref(false)
 const replyError = ref('')
+const noteMenuOpen = ref(null)
+const noteToDelete = ref(null)
+const deletingNote = ref(false)
+const noteDeleteError = ref('')
 
 function initials(note) {
   return note.authorDisplayName?.charAt(0)?.toUpperCase() || note.authorHandle.charAt(0).toUpperCase()
@@ -32,6 +36,36 @@ async function loadNotes() {
 function addNote(note) {
   notes.value = [note, ...notes.value]
   showModal.value = false
+}
+
+function toggleNoteMenu(noteId) {
+  noteMenuOpen.value = noteMenuOpen.value === noteId ? null : noteId
+}
+
+function requestDeleteNote(note) {
+  noteToDelete.value = note
+  noteMenuOpen.value = null
+  noteDeleteError.value = ''
+}
+
+function closeDeleteNote() {
+  if (deletingNote.value) return
+  noteToDelete.value = null
+  noteDeleteError.value = ''
+}
+
+async function confirmDeleteNote() {
+  if (!noteToDelete.value || deletingNote.value) return
+  deletingNote.value = true
+  try {
+    await deleteNote(noteToDelete.value.id)
+    notes.value = notes.value.filter((note) => note.id !== noteToDelete.value.id)
+    noteToDelete.value = null
+  } catch (error) {
+    noteDeleteError.value = error.message
+  } finally {
+    deletingNote.value = false
+  }
 }
 
 function openReply(note) {
@@ -86,13 +120,29 @@ onMounted(loadNotes)
       {{ t('notesEmpty') }}
     </div>
     <div v-else-if="notes.length" class="flex gap-3 overflow-x-auto pb-2">
-      <article v-for="note in notes" :key="note.id" class="min-w-[250px] max-w-[280px] rounded-2xl bg-mount p-4 shadow-sm">
+      <article v-for="note in notes" :key="note.id" class="relative min-w-[250px] max-w-[280px] rounded-2xl bg-mount p-4 shadow-sm">
         <div class="flex items-center gap-2">
           <img v-if="note.authorAvatarPath" :src="note.authorAvatarPath" :alt="note.authorDisplayName" class="h-8 w-8 rounded-full object-cover" />
           <span v-else class="flex h-8 w-8 items-center justify-center rounded-full bg-umber text-xs font-medium text-wall">{{ initials(note) }}</span>
-          <div class="min-w-0">
+          <div class="min-w-0 flex-1">
             <p class="truncate text-xs font-medium">{{ note.authorDisplayName }}</p>
             <p class="truncate text-[10px] text-graphite/50">@{{ note.authorHandle }}</p>
+          </div>
+          <div v-if="auth.isSignedIn && note.authorId === auth.session.userId" class="relative">
+            <button
+              type="button"
+              class="flex h-8 w-8 items-center justify-center rounded-full text-base leading-none text-graphite/60 transition hover:bg-wall-deep/55 hover:text-graphite"
+              :aria-label="t('noteMenu')"
+              :aria-expanded="noteMenuOpen === note.id"
+              @click.stop="toggleNoteMenu(note.id)"
+            >
+              <span aria-hidden="true">•••</span>
+            </button>
+            <div v-if="noteMenuOpen === note.id" class="absolute right-0 top-9 z-10 w-36 overflow-hidden rounded-2xl border border-graphite/10 bg-mount p-1.5 shadow-[0_12px_30px_rgba(53,47,39,0.14)]">
+              <button type="button" class="flex w-full rounded-xl px-3 py-2 text-left text-sm text-umber transition hover:bg-umber/10" @click.stop="requestDeleteNote(note)">
+                {{ t('deleteNote') }}
+              </button>
+            </div>
           </div>
         </div>
         <p class="mt-3 line-clamp-2 text-sm leading-5">{{ note.body }}</p>
@@ -140,6 +190,29 @@ onMounted(loadNotes)
           {{ sendingReply ? t('loading') : t('sendReply') }}
         </button>
       </form>
+    </div>
+
+    <div v-if="noteToDelete" class="fixed inset-0 z-[80] flex items-center justify-center bg-graphite/45 p-5 backdrop-blur-sm" role="presentation" @click.self="closeDeleteNote">
+      <div class="w-full max-w-[380px] rounded-3xl bg-mount p-6 text-graphite shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="delete-note-dialog-title">
+        <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-umber/10 text-umber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+            <path d="M4 7h16" />
+            <path d="M10 11v6M14 11v6" />
+            <path d="m6 7 1 13h10l1-13M9 7V4h6v3" />
+          </svg>
+        </div>
+        <h2 id="delete-note-dialog-title" class="mt-5 text-lg font-expanded font-semibold">{{ t('deleteNoteTitle') }}</h2>
+        <p class="mt-2 text-sm leading-6 text-graphite/65">{{ t('deleteNoteBody') }}</p>
+        <p v-if="noteDeleteError" class="mt-3 text-sm text-umber">{{ noteDeleteError }}</p>
+        <div class="mt-6 flex justify-end gap-2">
+          <button type="button" class="rounded-full bg-wall-deep px-4 py-2.5 text-sm font-medium transition hover:bg-graphite hover:text-wall" :disabled="deletingNote" @click="closeDeleteNote">
+            {{ t('cancel') }}
+          </button>
+          <button type="button" class="rounded-full bg-umber px-4 py-2.5 text-sm font-medium text-wall transition hover:brightness-110 disabled:cursor-wait disabled:opacity-50" :disabled="deletingNote" @click="confirmDeleteNote">
+            {{ deletingNote ? t('deleting') : t('confirmDeleteNote') }}
+          </button>
+        </div>
+      </div>
     </div>
   </section>
 </template>

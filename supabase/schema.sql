@@ -171,7 +171,7 @@ to anon, authenticated;
 grant update on public.profiles to authenticated;
 grant select, insert, update, delete on public.posts, public.comments to authenticated;
 grant select, insert, delete on public.likes, public.saves, public.reposts to authenticated;
-grant select, insert on public.messages to authenticated;
+grant select, insert, delete on public.messages to authenticated;
 grant update (read_at) on public.messages to authenticated;
 
 create policy "Public profiles are viewable"
@@ -263,6 +263,13 @@ create policy "Users can view their own messages"
 create policy "Users can send messages as themselves"
   on public.messages for insert to authenticated
   with check ((select auth.uid()) = sender_id);
+
+create policy "Users can delete their own conversations"
+  on public.messages for delete to authenticated
+  using (
+    (select auth.uid()) = sender_id
+    or (select auth.uid()) = receiver_id
+  );
 
 create policy "Receivers can mark messages as read"
   on public.messages for update to authenticated

@@ -6,7 +6,10 @@ import {
   getConversation,
   getMessageProfiles,
   markConversationRead,
+  deleteConversation,
+  getPinnedConversationIds,
   sendMessage,
+  setConversationPinned,
   subscribeToIncomingMessages,
 } from '@/api/messages'
 import LoadingMark from '@/components/ui/LoadingMark.vue'
@@ -24,7 +27,21 @@ const loadingConversation = ref(false)
 const sending = ref(false)
 const error = ref('')
 const messagesEnd = ref(null)
+const pinnedConversationIds = ref([])
+const conversationMenuOpen = ref(false)
+const showDeleteConfirm = ref(false)
+const deletingConversation = ref(false)
 let stopRealtime = null
+
+const orderedConversations = computed(() => {
+  const pinned = new Set(pinnedConversationIds.value)
+  return [...conversations.value].sort((a, b) => {
+    const aPinned = pinned.has(a.user.id)
+    const bPinned = pinned.has(b.user.id)
+    if (aPinned !== bPinned) return aPinned ? -1 : 1
+    return 0
+  })
+})
 
 const filteredProfiles = computed(() => {
   const query = search.value.trim().toLowerCase()
@@ -47,6 +64,7 @@ async function scrollToBottom() {
 
 async function selectUser(user) {
   activeUser.value = user
+  conversationMenuOpen.value = false
   loadingConversation.value = true
   error.value = ''
   try {
@@ -67,6 +85,7 @@ async function load() {
   try {
     profiles.value = await getMessageProfiles()
     conversations.value = await getConversations()
+    pinnedConversationIds.value = await getPinnedConversationIds()
 
     const requestedHandle = route.query.to
     const requestedUser = requestedHandle
@@ -78,6 +97,47 @@ async function load() {
     error.value = loadError.message
   } finally {
     loading.value = false
+  }
+}
+
+async function togglePinnedConversation() {
+  if (!activeUser.value) return
+  const isPinned = pinnedConversationIds.value.includes(activeUser.value.id)
+  try {
+    pinnedConversationIds.value = await setConversationPinned(activeUser.value.id, !isPinned)
+    conversationMenuOpen.value = false
+  } catch (pinError) {
+    error.value = pinError.message
+  }
+}
+
+function requestDeleteConversation() {
+  if (!activeUser.value || loadingConversation.value || deletingConversation.value) return
+  conversationMenuOpen.value = false
+  error.value = ''
+  showDeleteConfirm.value = true
+}
+
+async function removeActiveConversation() {
+  if (!activeUser.value || deletingConversation.value) return
+  const deletedUserId = activeUser.value.id
+  deletingConversation.value = true
+  loadingConversation.value = true
+  showDeleteConfirm.value = false
+  error.value = ''
+  try {
+    await deleteConversation(deletedUserId)
+    await setConversationPinned(deletedUserId, false)
+    conversations.value = conversations.value.filter((conversation) => conversation.user.id !== deletedUserId)
+    pinnedConversationIds.value = pinnedConversationIds.value.filter((id) => id !== deletedUserId)
+    messages.value = []
+    activeUser.value = null
+    conversationMenuOpen.value = false
+  } catch (deleteError) {
+    error.value = deleteError.message
+  } finally {
+    deletingConversation.value = false
+    loadingConversation.value = false
   }
 }
 
@@ -155,7 +215,7 @@ onBeforeUnmount(() => stopRealtime?.())
           <p class="px-2 pb-2 text-[10px] font-medium uppercase tracking-[0.16em] text-graphite/45">{{ t('conversations') }}</p>
           <div v-if="!conversations.length" class="px-2 pb-5 text-xs leading-5 text-graphite/55">{{ t('noConversations') }}</div>
           <button
-            v-for="conversation in conversations"
+            v-for="conversation in orderedConversations"
             :key="conversation.user.id"
             type="button"
             class="flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-wall-deep/50"
@@ -166,7 +226,24 @@ onBeforeUnmount(() => stopRealtime?.())
             <span v-else class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-umber text-sm font-medium text-wall">{{ initials(conversation.user) }}</span>
             <span class="min-w-0 flex-1">
               <span class="flex items-center justify-between gap-2">
-                <span class="truncate text-sm font-medium">{{ conversation.user.displayName }}</span>
+                <span class="flex min-w-0 flex-1 items-center gap-1.5 truncate text-sm font-medium">
+                  <span class="truncate">{{ conversation.user.displayName }}</span>
+                  <svg
+                    v-if="pinnedConversationIds.includes(conversation.user.id)"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="ml-auto h-5 w-5 shrink-0 rotate-45 text-umber"
+                    :aria-label="t('pinnedConversation')"
+                    role="img"
+                  >
+                    <path d="M14 4h1l-1-2h-4L9 4h1v5l-3 3v2h10v-2l-3-3V4Z" />
+                    <path d="M12 14v8" />
+                  </svg>
+                </span>
                 <span v-if="conversation.unreadCount" class="rounded-full bg-umber px-1.5 py-0.5 text-[10px] text-wall">{{ conversation.unreadCount }}</span>
               </span>
               <span class="mt-0.5 block truncate text-xs text-graphite/50">{{ conversation.lastMessage }}</span>
@@ -201,6 +278,25 @@ onBeforeUnmount(() => stopRealtime?.())
             <div class="min-w-0">
               <p class="truncate text-sm font-medium">{{ activeUser.displayName }}</p>
               <p class="truncate text-xs text-graphite/50">@{{ activeUser.handle }}</p>
+            </div>
+            <div class="relative ml-auto">
+              <button
+                type="button"
+                class="flex h-9 w-9 items-center justify-center rounded-full text-lg leading-none text-graphite/60 transition hover:bg-wall-deep/55 hover:text-graphite"
+                :aria-label="t('conversationMenu')"
+                :aria-expanded="conversationMenuOpen"
+                @click="conversationMenuOpen = !conversationMenuOpen"
+              >
+                <span aria-hidden="true">•••</span>
+              </button>
+              <div v-if="conversationMenuOpen" class="absolute right-0 top-11 z-10 w-44 overflow-hidden rounded-2xl border border-graphite/10 bg-mount p-1.5 shadow-[0_12px_30px_rgba(53,47,39,0.14)]">
+                <button type="button" class="flex w-full rounded-xl px-3 py-2 text-left text-sm transition hover:bg-wall-deep/50" @click="togglePinnedConversation">
+                  {{ pinnedConversationIds.includes(activeUser.id) ? t('unpinConversation') : t('pinConversation') }}
+                </button>
+                <button type="button" class="flex w-full rounded-xl px-3 py-2 text-left text-sm text-umber transition hover:bg-umber/10" @click="requestDeleteConversation">
+                  {{ t('deleteChat') }}
+                </button>
+              </div>
             </div>
           </header>
 
@@ -258,6 +354,33 @@ onBeforeUnmount(() => stopRealtime?.())
           <p class="mt-1 max-w-[32ch] text-sm text-graphite/55">{{ t('selectConversationHint') }}</p>
         </div>
       </section>
+    </div>
+
+    <div
+      v-if="showDeleteConfirm"
+      class="fixed inset-0 z-[80] flex items-center justify-center bg-graphite/45 p-5 backdrop-blur-sm"
+      role="presentation"
+      @click.self="showDeleteConfirm = false"
+    >
+      <div class="w-full max-w-[380px] rounded-3xl bg-mount p-6 text-graphite shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="delete-chat-dialog-title">
+        <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-umber/10 text-umber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+            <path d="M4 7h16" />
+            <path d="M10 11v6M14 11v6" />
+            <path d="m6 7 1 13h10l1-13M9 7V4h6v3" />
+          </svg>
+        </div>
+        <h2 id="delete-chat-dialog-title" class="mt-5 text-lg font-expanded font-semibold">{{ t('deleteChatTitle') }}</h2>
+        <p class="mt-2 text-sm leading-6 text-graphite/65">{{ t('deleteChatBody') }}</p>
+        <div class="mt-6 flex justify-end gap-2">
+          <button type="button" class="rounded-full bg-wall-deep px-4 py-2.5 text-sm font-medium transition hover:bg-graphite hover:text-wall" :disabled="deletingConversation" @click="showDeleteConfirm = false">
+            {{ t('cancel') }}
+          </button>
+          <button type="button" class="rounded-full bg-umber px-4 py-2.5 text-sm font-medium text-wall transition hover:brightness-110 disabled:cursor-wait disabled:opacity-50" :disabled="deletingConversation" @click="removeActiveConversation">
+            {{ deletingConversation ? t('deleting') : t('confirmDeleteChat') }}
+          </button>
+        </div>
+      </div>
     </div>
   </main>
 </template>

@@ -133,6 +133,43 @@ export async function markConversationRead(otherUserId) {
   if (error) throw error
 }
 
+export async function deleteConversation(otherUserId) {
+  const userId = await getUserId()
+  const { error } = await supabase
+    .from('messages')
+    .delete()
+    .or(`and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`)
+  if (error) throw error
+}
+
+const PINNED_CONVERSATIONS_KEY = 'rux-pinned-conversations'
+
+function readPinnedConversationIds(userId) {
+  try {
+    const stored = localStorage.getItem(`${PINNED_CONVERSATIONS_KEY}:${userId}`)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+function writePinnedConversationIds(userId, ids) {
+  localStorage.setItem(`${PINNED_CONVERSATIONS_KEY}:${userId}`, JSON.stringify(ids))
+}
+
+export async function getPinnedConversationIds() {
+  const userId = await getUserId()
+  return readPinnedConversationIds(userId)
+}
+
+export async function setConversationPinned(otherUserId, pinned) {
+  const userId = await getUserId()
+  const ids = readPinnedConversationIds(userId).filter((id) => id !== otherUserId)
+  if (pinned) ids.unshift(otherUserId)
+  writePinnedConversationIds(userId, ids)
+  return ids
+}
+
 export async function subscribeToIncomingMessages(onMessage) {
   const userId = await getUserId()
   const channel = supabase
