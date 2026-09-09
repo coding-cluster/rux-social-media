@@ -1,14 +1,6 @@
 import { onUnmounted } from 'vue'
 import { gsap } from './index'
 
-// The one orchestrated page-load moment: the datum line draws left to
-// right, then the first two mounts rise into position. Runs once, does
-// not replay on scroll — see useAdvance for everything below the fold.
-//
-// Call `play()` yourself once the first page of posts has rendered —
-// the composable can't know when your async fetch resolves. The context
-// is created here rather than in onMounted for the same reason: the feed
-// container is behind a v-if and doesn't exist until the fetch resolves.
 export function useHangReveal(scopeEl) {
   let ctx
   let played = false

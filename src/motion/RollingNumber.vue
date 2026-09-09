@@ -1,6 +1,4 @@
 <script setup>
-// Two stacked spans + a yPercent tween — no SplitText needed. Shared by
-// Mark (likes) and any other count that changes (comments, follows).
 import { ref, watch, nextTick } from 'vue'
 import { gsap, prefersReducedMotion } from './index'
 

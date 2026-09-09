@@ -24,6 +24,9 @@
  * @property {number} likeCount
  * @property {number} commentCount
  * @property {boolean} likedByMe
+ * @property {boolean} savedByMe
+ * @property {number} repostCount
+ * @property {boolean} repostedByMe
  * @property {string} createdAt - ISO timestamp
  *
  * @typedef {Object} Comment
@@ -35,9 +38,20 @@
  * @property {string} body
  * @property {string} createdAt - ISO timestamp
  *
+ * @typedef {Object} Message
+ * @property {string} id
+ * @property {string} senderId
+ * @property {string} receiverId
+ * @property {string} body
+ * @property {{ body: string, trackName: string, artistName: string }|null} replyNote
+ * @property {string|null} readAt
+ * @property {string} createdAt - ISO timestamp
+ * @property {boolean} isMine
+ *
  * @typedef {Object} Session
  * @property {string} userId
  * @property {string} handle
+ * @property {string} displayName
  */
 
 export {}

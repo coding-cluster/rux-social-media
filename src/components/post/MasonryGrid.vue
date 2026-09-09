@@ -1,8 +1,4 @@
 <script setup>
-// True masonry, laid out and animated by GSAP instead of CSS `columns` — item
-// order reads left-to-right (columns would read top-to-bottom-then-next-col),
-// and card heights come from the post's own aspect ratio so layout doesn't
-// have to wait on image load.
 import { ref, reactive, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { gsap, prefersReducedMotion } from '@/motion'
 import PostCard from './PostCard.vue'
@@ -14,7 +10,7 @@ const GAP = 16
 
 const containerRef = ref(null)
 const containerHeight = ref(0)
-const positions = reactive({}) // id -> { x, y, width }
+const positions = reactive({})
 const cardEls = new Map()
 const animatedIds = new Set()
 let resizeObserver

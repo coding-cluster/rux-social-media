@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { createPost } from '@/api/posts'
+import { supabase } from '@/api/supabase'
 import { t } from '@/i18n'
 
 const router = useRouter()
@@ -32,18 +33,29 @@ async function publish() {
   publishing.value = true
   error.value = ''
   try {
-    const post = await createPost({
-      authorId: auth.session.userId,
-      authorHandle: auth.session.handle,
-      authorDisplayName: auth.session.handle,
-      authorAvatarPath: null,
-      caption: caption.value || null,
-      imagePath: preview.value,
-      imageWidth: dimensions.value.width,
-      imageHeight: dimensions.value.height,
+    const extension = file.value.name.split('.').pop()?.toLowerCase() || 'jpg'
+    const storagePath = `${auth.session.userId}/${crypto.randomUUID()}.${extension}`
+
+    const { error: uploadError } = await supabase.storage.from('posts').upload(storagePath, file.value, {
+      contentType: file.value.type,
+      upsert: false,
     })
-    // land on the profile with the new post already expanded, card-style —
-    // no separate post/comments page for a freshly hung photo
+    if (uploadError) throw uploadError
+
+    let post
+    try {
+      post = await createPost({
+        authorId: auth.session.userId,
+        caption: caption.value || null,
+        imagePath: storagePath,
+        imageWidth: dimensions.value.width,
+        imageHeight: dimensions.value.height,
+      })
+    } catch (createError) {
+      await supabase.storage.from('posts').remove([storagePath])
+      throw createError
+    }
+
     router.push({ name: 'profile', params: { handle: auth.session.handle }, query: { post: post.id } })
   } catch (e) {
     error.value = e.message

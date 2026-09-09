@@ -5,6 +5,7 @@ import { getComments, addComment } from '@/api/comments'
 import { useAuthStore } from '@/stores/auth'
 import PostLabel from '@/components/post/PostLabel.vue'
 import PostMedia from '@/components/post/PostMedia.vue'
+import LoadingMark from '@/components/ui/LoadingMark.vue'
 import { useMark } from '@/motion/useMark'
 
 const props = defineProps({ id: String })
@@ -43,7 +44,7 @@ async function submitComment() {
     postId: post.value.id,
     authorId: auth.session.userId,
     authorHandle: auth.session.handle,
-    authorDisplayName: auth.session.handle,
+    authorDisplayName: auth.session.displayName || auth.session.handle,
     body: draft.value.trim(),
   })
   comments.value.push(comment)
@@ -96,5 +97,5 @@ async function submitComment() {
       </form>
     </section>
   </main>
-  <p v-else class="max-w-[980px] mx-auto px-6 py-12 text-sm text-graphite/60">Loading…</p>
+  <LoadingMark v-else />
 </template>

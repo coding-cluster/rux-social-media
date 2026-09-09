@@ -1,8 +1,4 @@
 <script setup>
-// The mount: a fixed-height board that centers any image on the shared
-// datum line, regardless of its own aspect ratio. Image is positioned
-// absolutely so the mount's own height is what reserves layout space —
-// that's what makes this zero-CLS without needing JS measurement.
 defineProps({
   post: { type: Object, required: true },
   height: { type: String, default: '420px' },

@@ -1,8 +1,5 @@
 import { gsap, prefersReducedMotion } from './index'
 
-// A like stamps a small umber square into the label. No timeline
-// to clean up — it's a one-shot tween per click, not a persistent
-// ScrollTrigger, so a plain gsap.to/set is enough (no context needed).
 export function useMark(el) {
   return function play(active) {
     const node = el.value ?? el

@@ -3,7 +3,7 @@ import RollingNumber from '@/motion/RollingNumber.vue'
 
 defineProps({
   post: { type: Object, required: true },
-  align: { type: String, default: 'right' }, // 'right' on desktop feed, 'left' on mobile/detail
+  align: { type: String, default: 'right' },
 })
 
 function timeAgo(iso) {

@@ -8,7 +8,7 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
-const mode = ref('signin') // 'signin' | 'signup'
+const mode = ref('signin')
 const email = ref('')
 const password = ref('')
 const handle = ref('')
@@ -46,7 +46,6 @@ const inputClass =
 <template>
   <main class="flex min-h-[calc(100vh-96px)] items-center justify-center px-4 py-8">
     <div class="grid w-full max-w-[1100px] overflow-hidden rounded-[32px] bg-mount shadow-2xl md:grid-cols-2">
-      <!-- form -->
       <div class="flex flex-col justify-center gap-8 px-10 py-12 md:px-14">
         <RouterLink
           to="/"
@@ -126,7 +125,6 @@ const inputClass =
         </button>
       </div>
 
-      <!-- photo panel -->
       <div class="relative hidden md:block">
         <img
           src="https://picsum.photos/seed/rux-auth-panel/900/1100"
