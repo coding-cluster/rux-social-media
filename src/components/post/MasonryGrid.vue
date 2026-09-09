@@ -4,9 +4,10 @@ import { gsap, prefersReducedMotion } from '@/motion'
 import PostCard from './PostCard.vue'
 
 const props = defineProps({ posts: { type: Array, required: true } })
-defineEmits(['select'])
+defineEmits(['select', 'updated'])
 
 const GAP = 16
+const ACTIONS_HEIGHT = 40
 
 const containerRef = ref(null)
 const containerHeight = ref(0)
@@ -35,7 +36,7 @@ function layout() {
     let col = 0
     for (let c = 1; c < cols; c++) if (colHeights[c] < colHeights[col]) col = c
 
-    const height = colWidth * (post.imageHeight / post.imageWidth)
+    const height = colWidth * (post.imageHeight / post.imageWidth) + ACTIONS_HEIGHT
     const x = col * (colWidth + GAP)
     const y = colHeights[col]
     positions[post.id] = { x, y, width: colWidth }
@@ -96,7 +97,7 @@ watch(
       class="absolute left-0 top-0"
       :style="{ width: (positions[post.id]?.width ?? 0) + 'px' }"
     >
-      <PostCard :post="post" @select="$emit('select', post)" />
+      <PostCard :post="post" @select="$emit('select', $event)" @updated="$emit('updated', $event)" />
     </div>
   </div>
 </template>

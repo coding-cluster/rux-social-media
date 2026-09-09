@@ -126,15 +126,14 @@ const inputClass =
       </div>
 
       <div class="relative hidden md:block">
-        <img
-          src="https://picsum.photos/seed/rux-auth-panel/900/1100"
-          alt=""
-          class="absolute inset-0 h-full w-full object-cover"
-        />
+        <div class="absolute inset-0 overflow-hidden bg-graphite">
+          <img :src="mode === 'signup' ? '/demo-feed/alfredo-signup.webp' : '/demo-feed/alfredo-login.webp'" alt="" class="absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-2xl" aria-hidden="true" />
+          <img :src="mode === 'signup' ? '/demo-feed/alfredo-signup.webp' : '/demo-feed/alfredo-login.webp'" alt="Alfredo Olivas" class="relative z-10 h-full w-full object-contain" />
+        </div>
 
         <RouterLink
           to="/"
-          class="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-wall/90 text-graphite shadow transition hover:bg-wall"
+          class="absolute right-5 top-5 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-wall/90 text-graphite shadow transition hover:bg-wall"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
             <path d="M18 6l-12 12" />
@@ -142,12 +141,12 @@ const inputClass =
           </svg>
         </RouterLink>
 
-        <div class="absolute left-6 top-8 flex w-fit flex-col gap-2 rounded-2xl bg-[#f0e6d2]/95 px-4 py-3 shadow-lg">
-          <p class="text-sm font-medium text-graphite">jamie_walks</p>
-          <p class="text-xs text-graphite/60">just hung a new photo</p>
+        <div class="absolute left-6 top-8 z-20 flex w-fit flex-col gap-2 rounded-2xl border border-white/35 bg-white/20 px-4 py-3 text-wall shadow-[0_12px_35px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.45)] backdrop-blur-2xl backdrop-saturate-150">
+          <p class="text-sm font-medium">jamie_walks</p>
+          <p class="text-xs text-wall/75">just hung a new photo</p>
         </div>
 
-        <div class="absolute bottom-8 left-6 right-6 flex items-center justify-between gap-3 rounded-2xl bg-graphite/80 px-5 py-4 text-wall shadow-lg backdrop-blur-xl">
+        <div class="absolute bottom-8 left-6 right-6 z-20 flex items-center justify-between gap-3 rounded-2xl border border-white/20 bg-graphite/55 px-5 py-4 text-wall shadow-[0_16px_40px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-2xl backdrop-saturate-150">
           <div>
             <p class="text-sm font-medium">The wall keeps growing</p>
             <p class="text-xs text-wall/60">1,204 photos hung this week</p>

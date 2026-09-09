@@ -4,6 +4,7 @@ import { toggleLike, toggleSaved, toggleRepost, updatePost, deletePost } from '@
 import { addComment, getComments } from '@/api/comments'
 import { useAuthStore } from '@/stores/auth'
 import { t } from '@/i18n'
+import { addDemoComment, getDemoComments, isDemoPost, toggleDemoLike, toggleDemoRepost, toggleDemoSaved } from '@/mocks/demoInteractions'
 
 const props = defineProps({ post: { type: Object, required: true } })
 const emit = defineEmits(['close', 'updated', 'deleted'])
@@ -24,7 +25,8 @@ const reposting = ref(false)
 const showDeleteConfirm = ref(false)
 const editError = ref('')
 const isOwner = computed(() => auth.isSignedIn && auth.session.userId === post.value.authorId)
-const canInteract = computed(() => /^[0-9a-f-]{36}$/i.test(post.value.id))
+const isLocalDemoPost = computed(() => isDemoPost(post.value.id))
+const canInteract = computed(() => isLocalDemoPost.value || /^[0-9a-f-]{36}$/i.test(post.value.id))
 
 function onKeydown(e) {
   if (e.key !== 'Escape') return
@@ -36,6 +38,10 @@ function onKeydown(e) {
 }
 async function loadComments() {
   if (!canInteract.value) return
+  if (isLocalDemoPost.value) {
+    comments.value = getDemoComments(post.value.id)
+    return
+  }
   loadingComments.value = true
   try {
     comments.value = await getComments(post.value.id)
@@ -55,10 +61,16 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 async function onLike() {
   if (!canInteract.value) return
   const before = { likedByMe: post.value.likedByMe, likeCount: post.value.likeCount }
-  post.value.likedByMe = !before.likedByMe
-  post.value.likeCount += post.value.likedByMe ? 1 : -1
   try {
-    await toggleLike(post.value.id)
+    if (isLocalDemoPost.value) {
+      post.value = toggleDemoLike(post.value)
+    } else {
+      post.value.likedByMe = !before.likedByMe
+      post.value.likeCount += post.value.likedByMe ? 1 : -1
+      const result = await toggleLike(post.value.id)
+      post.value = { ...post.value, ...result }
+    }
+    emit('updated', post.value)
   } catch {
     post.value.likedByMe = before.likedByMe
     post.value.likeCount = before.likeCount
@@ -66,26 +78,36 @@ async function onLike() {
 }
 
 async function onSave() {
-  if (!auth.isSignedIn || !canInteract.value) return
+  if ((!auth.isSignedIn && !isLocalDemoPost.value) || !canInteract.value) return
   const before = post.value.savedByMe
-  post.value.savedByMe = !before
   try {
-    await toggleSaved(post.value.id)
+    if (isLocalDemoPost.value) {
+      post.value = toggleDemoSaved(post.value)
+    } else {
+      post.value.savedByMe = !before
+      const result = await toggleSaved(post.value.id)
+      post.value = { ...post.value, ...result }
+    }
+    emit('updated', post.value)
   } catch {
     post.value.savedByMe = before
   }
 }
 
 async function onRepost() {
-  if (!auth.isSignedIn || !canInteract.value || reposting.value) return
+  if ((!auth.isSignedIn && !isLocalDemoPost.value) || !canInteract.value || reposting.value) return
   const before = { repostedByMe: post.value.repostedByMe, repostCount: post.value.repostCount }
-  post.value.repostedByMe = !before.repostedByMe
-  post.value.repostCount += post.value.repostedByMe ? 1 : -1
   reposting.value = true
   try {
-    const result = await toggleRepost(post.value.id)
-    post.value.repostedByMe = result.repostedByMe
-    post.value.repostCount = result.repostCount
+    if (isLocalDemoPost.value) {
+      post.value = toggleDemoRepost(post.value)
+    } else {
+      post.value.repostedByMe = !before.repostedByMe
+      post.value.repostCount += post.value.repostedByMe ? 1 : -1
+      const result = await toggleRepost(post.value.id)
+      post.value.repostedByMe = result.repostedByMe
+      post.value.repostCount = result.repostCount
+    }
     emit('updated', post.value)
   } catch {
     post.value.repostedByMe = before.repostedByMe
@@ -96,20 +118,28 @@ async function onRepost() {
 }
 
 async function submitComment() {
-  if (!commentDraft.value.trim() || !auth.isSignedIn || !canInteract.value || postingComment.value) return
+  if (!commentDraft.value.trim() || (!auth.isSignedIn && !isLocalDemoPost.value) || !canInteract.value || postingComment.value) return
   postingComment.value = true
   commentError.value = ''
 
   try {
-    const comment = await addComment({
-      postId: post.value.id,
-      authorId: auth.session.userId,
-      authorHandle: auth.session.handle,
-      authorDisplayName: auth.session.displayName || auth.session.handle,
-      body: commentDraft.value.trim(),
-    })
+    const comment = isLocalDemoPost.value
+      ? addDemoComment({
+        postId: post.value.id,
+        authorHandle: auth.session?.handle || 'guest',
+        authorDisplayName: auth.session?.displayName || 'Tú',
+        body: commentDraft.value.trim(),
+      })
+      : await addComment({
+        postId: post.value.id,
+        authorId: auth.session.userId,
+        authorHandle: auth.session.handle,
+        authorDisplayName: auth.session.displayName || auth.session.handle,
+        body: commentDraft.value.trim(),
+      })
     comments.value.push(comment)
     post.value.commentCount += 1
+    emit('updated', post.value)
     commentDraft.value = ''
   } catch (error) {
     commentError.value = error.message
@@ -186,11 +216,13 @@ async function removePost() {
         </svg>
       </button>
 
-      <img
-        :src="post.imagePath"
-        :alt="post.caption || `Photo by ${post.authorHandle}`"
-        class="max-h-[55vh] w-full rounded-t-3xl object-cover"
-      />
+      <div class="flex max-h-[70vh] justify-center overflow-hidden rounded-t-3xl bg-graphite/5">
+        <img
+          :src="post.imagePath"
+          :alt="post.caption || `Photo by ${post.authorHandle}`"
+          class="h-auto max-h-[70vh] max-w-full w-auto object-contain"
+        />
+      </div>
       <div class="flex flex-col gap-3 p-6">
         <div class="flex items-center gap-3">
           <img
@@ -327,7 +359,7 @@ async function removePost() {
           </ul>
         </div>
 
-        <form v-if="showCommentInput && auth.isSignedIn && canInteract" class="flex gap-3" @submit.prevent="submitComment">
+        <form v-if="showCommentInput && canInteract" class="flex gap-3" @submit.prevent="submitComment">
           <input
             v-model="commentDraft"
             type="text"
@@ -340,7 +372,7 @@ async function removePost() {
             {{ postingComment ? t('commenting') : t('post') }}
           </button>
         </form>
-        <RouterLink v-if="showCommentInput && !auth.isSignedIn" :to="{ name: 'auth' }" class="text-sm text-graphite/60 hover:text-umber">
+        <RouterLink v-if="showCommentInput && !auth.isSignedIn && !isLocalDemoPost" :to="{ name: 'auth' }" class="text-sm text-graphite/60 hover:text-umber">
           {{ t('signInToComment') }}
         </RouterLink>
         <p v-if="commentError" class="text-sm text-umber">{{ commentError }}</p>

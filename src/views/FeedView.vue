@@ -47,7 +47,7 @@ async function loadMore() {
     <p v-else-if="!posts.length" class="text-lg font-expanded font-semibold">
       {{ t('feedEmpty') }}
     </p>
-    <MasonryGrid v-else :posts="posts" @select="expandedPost = $event" />
+    <MasonryGrid v-else :posts="posts" @select="expandedPost = $event" @updated="updatePostInFeed" />
     <button
       v-if="nextCursor"
       type="button"
