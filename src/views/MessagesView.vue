@@ -31,7 +31,9 @@ const pinnedConversationIds = ref([])
 const conversationMenuOpen = ref(false)
 const showDeleteConfirm = ref(false)
 const deletingConversation = ref(false)
+const isMobile = ref(false)
 let stopRealtime = null
+let mobileMediaQuery = null
 
 const orderedConversations = computed(() => {
   const pinned = new Set(pinnedConversationIds.value)
@@ -79,6 +81,17 @@ async function selectUser(user) {
   }
 }
 
+function goBackToMessages() {
+  activeUser.value = null
+  messages.value = []
+  conversationMenuOpen.value = false
+  error.value = ''
+}
+
+function updateMobileState() {
+  isMobile.value = mobileMediaQuery?.matches ?? false
+}
+
 async function load() {
   loading.value = true
   error.value = ''
@@ -91,7 +104,7 @@ async function load() {
     const requestedUser = requestedHandle
       ? profiles.value.find((profile) => profile.handle === requestedHandle || profile.id === requestedHandle)
       : null
-    const firstUser = requestedUser || conversations.value[0]?.user
+    const firstUser = requestedUser || (!isMobile.value ? conversations.value[0]?.user : null)
     if (firstUser) await selectUser(firstUser)
   } catch (loadError) {
     error.value = loadError.message
@@ -178,6 +191,9 @@ async function handleIncomingMessage(message) {
 watch(messages, scrollToBottom)
 
 onMounted(async () => {
+  mobileMediaQuery = window.matchMedia('(max-width: 1023px)')
+  updateMobileState()
+  mobileMediaQuery.addEventListener('change', updateMobileState)
   await load()
   try {
     stopRealtime = await subscribeToIncomingMessages(handleIncomingMessage)
@@ -187,6 +203,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => stopRealtime?.())
+onBeforeUnmount(() => mobileMediaQuery?.removeEventListener('change', updateMobileState))
 </script>
 
 <template>
@@ -201,7 +218,10 @@ onBeforeUnmount(() => stopRealtime?.())
     <p v-else-if="error && !activeUser" class="text-sm text-umber">{{ error }}</p>
 
     <div v-else class="grid min-h-[620px] overflow-hidden rounded-3xl border border-graphite/10 bg-mount shadow-[0_18px_50px_rgba(53,47,39,0.06)] lg:grid-cols-[300px_1fr]">
-      <aside class="border-b border-graphite/10 bg-mount lg:border-b-0 lg:border-r">
+      <aside
+        class="border-b border-graphite/10 bg-mount lg:border-b-0 lg:border-r"
+        :class="activeUser ? 'hidden lg:block' : 'block'"
+      >
         <div class="p-4 sm:p-5">
           <input
             v-model="search"
@@ -270,9 +290,22 @@ onBeforeUnmount(() => stopRealtime?.())
         </div>
       </aside>
 
-      <section class="flex min-h-[620px] flex-col bg-wall/35">
+      <section
+        class="min-h-[620px] flex-col bg-wall/35"
+        :class="activeUser ? 'flex' : 'hidden lg:flex'"
+      >
         <template v-if="activeUser">
           <header class="flex items-center gap-3 border-b border-graphite/10 bg-mount px-5 py-4 sm:px-7">
+            <button
+              type="button"
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-graphite/65 transition hover:bg-wall-deep/55 hover:text-graphite lg:hidden"
+              :aria-label="t('backToMessages')"
+              @click="goBackToMessages"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+                <path d="m15 5-7 7 7 7" />
+              </svg>
+            </button>
             <img v-if="activeUser.avatarPath" :src="activeUser.avatarPath" :alt="activeUser.displayName" class="h-10 w-10 rounded-full object-cover" />
             <span v-else class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium text-wall" :style="{ backgroundColor: activeUser.avatarColor || '#7a4a2a' }">{{ activeUser.avatarEmoji || initials(activeUser) }}</span>
             <div class="min-w-0">

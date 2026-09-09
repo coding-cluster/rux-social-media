@@ -71,7 +71,7 @@ const inputClass =
             </label>
             <label class="flex flex-col gap-2">
               <span class="text-xs font-medium text-graphite/60">{{ t('handle') }}</span>
-              <input v-model="handle" type="text" required pattern="[a-z0-9_]{3,20}" :class="inputClass" />
+              <input v-model="handle" type="text" required autocomplete="username" :class="inputClass" />
             </label>
           </template>
 

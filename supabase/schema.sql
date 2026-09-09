@@ -4,8 +4,7 @@ create schema if not exists private;
 
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  handle text not null unique
-    check (handle = lower(handle) and handle ~ '^[a-z0-9_]{3,20}$'),
+  handle text not null unique,
   display_name text not null
     check (char_length(trim(display_name)) between 1 and 80),
   bio text
@@ -89,10 +88,10 @@ begin
   insert into public.profiles (id, handle, display_name)
   values (
     new.id,
-    lower(coalesce(
+    coalesce(
       nullif(new.raw_user_meta_data ->> 'handle', ''),
       'user_' || substr(replace(new.id::text, '-', ''), 1, 8)
-    )),
+    ),
     coalesce(nullif(new.raw_user_meta_data ->> 'display_name', ''), 'New user')
   );
   return new;

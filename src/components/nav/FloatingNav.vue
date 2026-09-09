@@ -9,6 +9,9 @@ const postBtn = ref(null)
 const langKnob = ref(null)
 const menuRef = ref(null)
 const menuOpen = ref(false)
+const showSignOutConfirm = ref(false)
+const signingOut = ref(false)
+const signOutError = ref('')
 
 const KNOB_TRAVEL = 28
 onMounted(() => {
@@ -21,6 +24,26 @@ onBeforeUnmount(() => document.removeEventListener('click', closeMenuOnOutsideCl
 
 function closeMenuOnOutsideClick(event) {
   if (menuRef.value && !menuRef.value.contains(event.target)) menuOpen.value = false
+}
+
+function requestSignOut() {
+  menuOpen.value = false
+  signOutError.value = ''
+  showSignOutConfirm.value = true
+}
+
+async function confirmSignOut() {
+  if (signingOut.value) return
+  signingOut.value = true
+  signOutError.value = ''
+  try {
+    await auth.signOut()
+    showSignOutConfirm.value = false
+  } catch (error) {
+    signOutError.value = error.message
+  } finally {
+    signingOut.value = false
+  }
 }
 
 function onPostHover(scale) {
@@ -156,7 +179,7 @@ function onToggleLocale() {
               v-if="auth.isSignedIn"
               type="button"
               class="mt-1 border-t border-graphite/10 px-3 py-2.5 text-left text-sm text-umber transition hover:text-graphite"
-              @click="auth.signOut(); menuOpen = false"
+              @click="requestSignOut"
             >
               {{ t('signOut') }}
             </button>
@@ -172,5 +195,32 @@ function onToggleLocale() {
         </div>
       </div>
     </nav>
+
+    <div
+      v-if="showSignOutConfirm"
+      class="fixed inset-0 z-[80] flex items-center justify-center bg-graphite/45 p-5 backdrop-blur-sm"
+      role="presentation"
+      @click.self="showSignOutConfirm = false"
+    >
+      <div class="w-full max-w-[380px] rounded-3xl bg-mount p-6 text-graphite shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="sign-out-dialog-title">
+        <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-umber/10 text-umber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+            <path d="M10 5H6.5A2.5 2.5 0 0 0 4 7.5v9A2.5 2.5 0 0 0 6.5 19H10" />
+            <path d="M13 8l4 4-4 4M17 12H9" />
+          </svg>
+        </div>
+        <h2 id="sign-out-dialog-title" class="mt-5 text-lg font-expanded font-semibold">{{ t('signOutTitle') }}</h2>
+        <p class="mt-2 text-sm leading-6 text-graphite/65">{{ t('signOutBody') }}</p>
+        <p v-if="signOutError" class="mt-3 text-sm text-umber">{{ signOutError }}</p>
+        <div class="mt-6 flex justify-end gap-2">
+          <button type="button" class="rounded-full bg-wall-deep px-4 py-2.5 text-sm font-medium transition hover:bg-graphite hover:text-wall" :disabled="signingOut" @click="showSignOutConfirm = false">
+            {{ t('cancel') }}
+          </button>
+          <button type="button" class="rounded-full bg-umber px-4 py-2.5 text-sm font-medium text-wall transition hover:brightness-110 disabled:cursor-wait disabled:opacity-50" :disabled="signingOut" @click="confirmSignOut">
+            {{ signingOut ? t('pleaseWait') : t('confirmSignOut') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
