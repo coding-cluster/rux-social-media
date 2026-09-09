@@ -123,7 +123,7 @@ onMounted(loadNotes)
       <article v-for="note in notes" :key="note.id" class="relative min-w-[250px] max-w-[280px] rounded-2xl bg-mount p-4 shadow-sm">
         <div class="flex items-center gap-2">
           <img v-if="note.authorAvatarPath" :src="note.authorAvatarPath" :alt="note.authorDisplayName" class="h-8 w-8 rounded-full object-cover" />
-          <span v-else class="flex h-8 w-8 items-center justify-center rounded-full bg-umber text-xs font-medium text-wall">{{ initials(note) }}</span>
+          <span v-else class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium text-wall" :style="{ backgroundColor: note.authorAvatarColor || '#7a4a2a' }">{{ note.authorAvatarEmoji || initials(note) }}</span>
           <div class="min-w-0 flex-1">
             <p class="truncate text-xs font-medium">{{ note.authorDisplayName }}</p>
             <p class="truncate text-[10px] text-graphite/50">@{{ note.authorHandle }}</p>

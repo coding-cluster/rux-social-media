@@ -223,7 +223,7 @@ onBeforeUnmount(() => stopRealtime?.())
             @click="selectUser(conversation.user)"
           >
             <img v-if="conversation.user.avatarPath" :src="conversation.user.avatarPath" :alt="conversation.user.displayName" class="h-10 w-10 rounded-full object-cover" />
-            <span v-else class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-umber text-sm font-medium text-wall">{{ initials(conversation.user) }}</span>
+            <span v-else class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-medium text-wall" :style="{ backgroundColor: conversation.user.avatarColor || '#7a4a2a' }">{{ conversation.user.avatarEmoji || initials(conversation.user) }}</span>
             <span class="min-w-0 flex-1">
               <span class="flex items-center justify-between gap-2">
                 <span class="flex min-w-0 flex-1 items-center gap-1.5 truncate text-sm font-medium">
@@ -261,7 +261,7 @@ onBeforeUnmount(() => stopRealtime?.())
             @click="selectUser(profile)"
           >
             <img v-if="profile.avatarPath" :src="profile.avatarPath" :alt="profile.displayName" class="h-10 w-10 rounded-full object-cover" />
-            <span v-else class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-graphite text-sm font-medium text-wall">{{ initials(profile) }}</span>
+            <span v-else class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-medium text-wall" :style="{ backgroundColor: profile.avatarColor || '#22231f' }">{{ profile.avatarEmoji || initials(profile) }}</span>
             <span class="min-w-0">
               <span class="block truncate text-sm font-medium">{{ profile.displayName }}</span>
               <span class="block truncate text-xs text-graphite/50">@{{ profile.handle }}</span>
@@ -274,7 +274,7 @@ onBeforeUnmount(() => stopRealtime?.())
         <template v-if="activeUser">
           <header class="flex items-center gap-3 border-b border-graphite/10 bg-mount px-5 py-4 sm:px-7">
             <img v-if="activeUser.avatarPath" :src="activeUser.avatarPath" :alt="activeUser.displayName" class="h-10 w-10 rounded-full object-cover" />
-            <span v-else class="flex h-10 w-10 items-center justify-center rounded-full bg-umber text-sm font-medium text-wall">{{ initials(activeUser) }}</span>
+            <span v-else class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium text-wall" :style="{ backgroundColor: activeUser.avatarColor || '#7a4a2a' }">{{ activeUser.avatarEmoji || initials(activeUser) }}</span>
             <div class="min-w-0">
               <p class="truncate text-sm font-medium">{{ activeUser.displayName }}</p>
               <p class="truncate text-xs text-graphite/50">@{{ activeUser.handle }}</p>

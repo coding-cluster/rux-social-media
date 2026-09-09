@@ -74,7 +74,7 @@ onBeforeUnmount(() => clearTimeout(searchTimer))
       <article v-for="profile in results" :key="profile.id" class="flex items-center gap-3 rounded-2xl bg-mount p-4 shadow-sm">
         <RouterLink :to="{ name: 'profile', params: { handle: profile.handle } }" class="shrink-0">
           <img v-if="profile.avatarPath" :src="profile.avatarPath" :alt="profile.displayName" class="h-12 w-12 rounded-full object-cover" />
-          <span v-else class="flex h-12 w-12 items-center justify-center rounded-full bg-umber text-sm font-medium text-wall">{{ initials(profile) }}</span>
+          <span v-else class="flex h-12 w-12 items-center justify-center rounded-full text-sm font-medium text-wall" :style="{ backgroundColor: profile.avatarColor || '#7a4a2a' }">{{ profile.avatarEmoji || initials(profile) }}</span>
         </RouterLink>
         <div class="min-w-0 flex-1">
           <RouterLink :to="{ name: 'profile', params: { handle: profile.handle } }" class="block truncate text-sm font-medium hover:text-umber">

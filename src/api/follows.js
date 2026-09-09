@@ -17,6 +17,8 @@ function mapProfile(row, followingIds) {
     displayName: row.display_name,
     bio: row.bio,
     avatarPath: avatarUrl(row.avatar_path),
+    avatarEmoji: row.avatar_emoji,
+    avatarColor: row.avatar_color,
     followingByMe: followingIds.has(row.id),
   }
 }
@@ -27,8 +29,8 @@ export async function searchPeople(query) {
 
   const pattern = `%${term}%`
   const [handleResult, nameResult] = await Promise.all([
-    supabase.from('profiles').select('id, handle, display_name, bio, avatar_path').ilike('handle', pattern).limit(20),
-    supabase.from('profiles').select('id, handle, display_name, bio, avatar_path').ilike('display_name', pattern).limit(20),
+    supabase.from('profiles').select('id, handle, display_name, bio, avatar_path, avatar_emoji, avatar_color').ilike('handle', pattern).limit(20),
+    supabase.from('profiles').select('id, handle, display_name, bio, avatar_path, avatar_emoji, avatar_color').ilike('display_name', pattern).limit(20),
   ])
   if (handleResult.error) throw handleResult.error
   if (nameResult.error) throw nameResult.error

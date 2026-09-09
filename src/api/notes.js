@@ -13,6 +13,8 @@ function mapNote(row) {
     authorHandle: profile?.handle || row.author_handle,
     authorDisplayName: profile?.display_name || row.author_display_name,
     authorAvatarPath: avatarUrl(profile?.avatar_path || row.author_avatar_path),
+    authorAvatarEmoji: profile?.avatar_emoji || row.author_avatar_emoji,
+    authorAvatarColor: profile?.avatar_color || row.author_avatar_color,
     body: row.body,
     trackId: row.track_id,
     trackName: row.track_name,
@@ -56,7 +58,7 @@ export async function getActiveNotes() {
   const { data, error } = await supabase
     .from('notes')
     .select(
-      'id, author_id, body, track_id, track_name, artist_name, artwork_url, preview_url, track_url, created_at, expires_at, profiles(handle, display_name, avatar_path)',
+      'id, author_id, body, track_id, track_name, artist_name, artwork_url, preview_url, track_url, created_at, expires_at, profiles(handle, display_name, avatar_path, avatar_emoji, avatar_color)',
     )
     .gt('expires_at', new Date().toISOString())
     .order('created_at', { ascending: false })

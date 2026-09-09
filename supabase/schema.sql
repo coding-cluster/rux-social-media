@@ -11,6 +11,10 @@ create table public.profiles (
   bio text
     check (bio is null or char_length(bio) <= 280),
   avatar_path text,
+  avatar_emoji text
+    check (avatar_emoji is null or char_length(avatar_emoji) <= 8),
+  avatar_color text
+    check (avatar_color is null or avatar_color in ('#7a4a2a', '#22231f', '#b39a76', '#6f7c57', '#315c67', '#a64d3c')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

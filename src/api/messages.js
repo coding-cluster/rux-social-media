@@ -11,6 +11,8 @@ function mapProfile(row) {
     handle: row.handle,
     displayName: row.display_name,
     avatarPath: avatarUrl(row.avatar_path),
+    avatarEmoji: row.avatar_emoji,
+    avatarColor: row.avatar_color,
   }
 }
 
@@ -54,7 +56,7 @@ export async function getMessageProfiles() {
   const userId = await getUserId()
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, handle, display_name, avatar_path')
+    .select('id, handle, display_name, avatar_path, avatar_emoji, avatar_color')
     .neq('id', userId)
     .order('display_name', { ascending: true })
   if (error) throw error
@@ -70,7 +72,7 @@ export async function getConversations() {
 
   const { data: profiles, error } = await supabase
     .from('profiles')
-    .select('id, handle, display_name, avatar_path')
+    .select('id, handle, display_name, avatar_path, avatar_emoji, avatar_color')
     .in('id', otherIds)
   if (error) throw error
 
